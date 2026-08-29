@@ -749,6 +749,10 @@ function delta(val, baseline){
   return `<span class="k-delta ${cls} num">${arrow} ${Math.abs(d).toFixed(0)}% vs 門市總計</span>`;
 }
 
+function storeShare(value, storeTotal){
+  return `<span class="k-delta flat num">佔門市 ${((value / storeTotal) * 100).toFixed(0)}%</span>`;
+}
+
 function averageNote(value){
   return `<div class="k-average num">門市總計 ${value}</div>`;
 }
@@ -810,12 +814,12 @@ function selectPerson(id){
     </div>`;
 
   document.getElementById('kpiGrid').innerHTML = `
-    <div class="kpi"><div class="k-label">業績</div><div class="k-value num">${fmtW(p.sales)}</div>${averageNote(fmtW(B.sales))}${delta(p.sales, B.sales)}</div>
+    <div class="kpi"><div class="k-label">業績</div><div class="k-value num">${fmtW(p.sales)}</div>${averageNote(fmtW(B.sales))}${storeShare(p.sales, B.sales)}</div>
     <div class="kpi"><div class="k-label">差距</div><div class="k-value num" style="color:${over?'var(--good)':'var(--crit)'}">${signedW(p.gap)}</div>${averageNote(signedW(B.gap))}<span class="k-delta ${over?'up':'down'}">${over?'超標':'待補'}</span></div>
     <div class="kpi"><div class="k-label">連帶率 UPT</div><div class="k-value num">${p.upt.toFixed(2)}</div>${averageNote(B.upt.toFixed(2))}${delta(p.upt, B.upt)}</div>
     <div class="kpi"><div class="k-label">客均消費 ADS</div><div class="k-value num">${fmtN(p.ads)}</div>${averageNote(fmtN(B.ads))}${delta(p.ads, B.ads)}</div>
     <div class="kpi"><div class="k-label">件均價 AUR</div><div class="k-value num">${fmtN(p.aur)}</div>${averageNote(fmtN(B.aur))}${delta(p.aur, B.aur)}</div>
-    <div class="kpi"><div class="k-label">成交筆數</div><div class="k-value num">${p.trans}</div>${averageNote(B.trans)}${delta(p.trans, B.trans)}</div>`;
+    <div class="kpi"><div class="k-label">成交筆數</div><div class="k-value num">${p.trans}</div>${averageNote(B.trans)}${storeShare(p.trans, B.trans)}</div>`;
 
   document.getElementById('legendMe').style.background = p.hex;
   document.getElementById('pairBars').innerHTML = Object.entries(p.cats).map(([k,v],i) => {
