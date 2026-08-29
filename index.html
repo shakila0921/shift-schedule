@@ -801,8 +801,8 @@ function selectPerson(id){
     <div class="kpi"><div class="k-label">業績</div><div class="k-value num">${fmtW(p.sales)}</div>${averageNote(fmtW(A.sales))}${delta(p.sales, A.sales)}</div>
     <div class="kpi"><div class="k-label">差距</div><div class="k-value num" style="color:${over?'var(--good)':'var(--crit)'}">${signedW(p.gap)}</div>${averageNote(signedW(A.gap))}<span class="k-delta ${over?'up':'down'}">${over?'超標':'待補'}</span></div>
     <div class="kpi"><div class="k-label">連帶率 UPT</div><div class="k-value num">${p.upt.toFixed(2)}</div>${averageNote(A.upt.toFixed(2))}${delta(p.upt, A.upt)}</div>
-    <div class="kpi"><div class="k-label">客均消費 ADS</div><div class="k-value num">${fmtN(p.ads)}</div>${averageNote(fmtN(A.ads))}${delta(p.ads, A.ads)}</div>
-    <div class="kpi"><div class="k-label">件均價 AUR</div><div class="k-value num">${fmtN(p.aur)}</div>${averageNote(fmtN(A.aur))}${delta(p.aur, A.aur)}</div>
+    <div class="kpi"><div class="k-label">客均消費 ADS</div><div class="k-value num">${fmtN(p.ads)}</div>${averageNote(fmtN(Math.round(A.ads)))}${delta(p.ads, A.ads)}</div>
+    <div class="kpi"><div class="k-label">件均價 AUR</div><div class="k-value num">${fmtN(p.aur)}</div>${averageNote(fmtN(Math.round(A.aur)))}${delta(p.aur, A.aur)}</div>
     <div class="kpi"><div class="k-label">成交筆數</div><div class="k-value num">${p.trans}</div>${averageNote(A.trans.toFixed(1))}${delta(p.trans, A.trans)}</div>`;
 
   document.getElementById('legendMe').style.background = p.hex;
