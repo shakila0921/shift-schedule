@@ -232,6 +232,7 @@ b { font-weight: 700; }
 .kpi .k-label { font-size: 9px; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; }
 .kpi .k-value { font-family: var(--serif); font-size: 22px; margin: 2px 0; }
 .kpi .k-average { font-size: 10px; color: var(--muted); margin: 0 0 5px; }
+.kpi-benchmark-note { font-size: 10px; color: var(--muted); margin: -3px 0 11px; }
 .kpi .k-delta { font-size: 11px; font-weight: 600; }
 .kpi .k-delta.up { color: var(--good); }
 .kpi .k-delta.down { color: var(--crit); }
@@ -450,7 +451,8 @@ table.hm { border-collapse: collapse; width: 100%; min-width: 640px; background:
       <div class="chips" id="chips"></div>
       <div class="card" id="profileCard"></div>
       <div class="card">
-        <div class="subhead">六大指標 vs 團隊平均</div>
+        <div class="subhead">六大指標 vs 團隊人均</div>
+        <div class="kpi-benchmark-note">比較基準為個人榜所列同仁的人均，不是門市總額；全店 KPI 請見上方「門市體質一眼看」。</div>
         <div class="kpi-grid" id="kpiGrid"></div>
       </div>
       <div class="two-col">
@@ -748,11 +750,30 @@ function delta(val, avg){
 }
 
 function averageNote(value){
-  return `<div class="k-average num">店平均 ${value}</div>`;
+  return `<div class="k-average num">團隊人均 ${value}</div>`;
 }
 
 function signedW(value){
   return `${value >= 0 ? '+' : ''}${fmtW(value)}`;
+}
+
+function teamBenchmark(){
+  const people = CUR.people;
+  const total = key => people.reduce((sum, person) => sum + person[key], 0);
+  const totalSales = total('sales');
+  const totalTarget = total('target');
+  const totalTrans = total('trans');
+  const totalItems = people.reduce((sum, person) => sum + person.upt * person.trans, 0);
+  return {
+    sales: totalSales / people.length,
+    ach: totalSales / totalTarget,
+    upt: totalItems / totalTrans,
+    ads: totalSales / totalTrans,
+    aur: people.reduce((sum, person) => sum + person.aur * person.upt * person.trans, 0) / totalItems,
+    trans: totalTrans / people.length,
+    gap: total('gap') / people.length,
+    breadth: people.reduce((sum, person) => sum + breadth(person), 0) / people.length,
+  };
 }
 
 function selectPerson(id){
@@ -760,8 +781,7 @@ function selectPerson(id){
   if (!p) return;
   document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.id === id));
   const over = p.ach >= 1;
-  const A = CUR.teamAvg, M = CUR.radarMax;
-  const avgGap = CUR.people.reduce((sum, person) => sum + person.gap, 0) / CUR.people.length;
+  const A = teamBenchmark(), M = CUR.radarMax;
 
   document.getElementById('profileCard').innerHTML = `
     <div class="profile-head" style="--pc:${p.hex}">
@@ -779,7 +799,7 @@ function selectPerson(id){
 
   document.getElementById('kpiGrid').innerHTML = `
     <div class="kpi"><div class="k-label">業績</div><div class="k-value num">${fmtW(p.sales)}</div>${averageNote(fmtW(A.sales))}${delta(p.sales, A.sales)}</div>
-    <div class="kpi"><div class="k-label">差距</div><div class="k-value num" style="color:${over?'var(--good)':'var(--crit)'}">${signedW(p.gap)}</div>${averageNote(signedW(avgGap))}<span class="k-delta ${over?'up':'down'}">${over?'超標':'待補'}</span></div>
+    <div class="kpi"><div class="k-label">差距</div><div class="k-value num" style="color:${over?'var(--good)':'var(--crit)'}">${signedW(p.gap)}</div>${averageNote(signedW(A.gap))}<span class="k-delta ${over?'up':'down'}">${over?'超標':'待補'}</span></div>
     <div class="kpi"><div class="k-label">連帶率 UPT</div><div class="k-value num">${p.upt.toFixed(2)}</div>${averageNote(A.upt.toFixed(2))}${delta(p.upt, A.upt)}</div>
     <div class="kpi"><div class="k-label">客均消費 ADS</div><div class="k-value num">${fmtN(p.ads)}</div>${averageNote(fmtN(A.ads))}${delta(p.ads, A.ads)}</div>
     <div class="kpi"><div class="k-label">件均價 AUR</div><div class="k-value num">${fmtN(p.aur)}</div>${averageNote(fmtN(A.aur))}${delta(p.aur, A.aur)}</div>
