@@ -451,8 +451,8 @@ table.hm { border-collapse: collapse; width: 100%; min-width: 640px; background:
       <div class="chips" id="chips"></div>
       <div class="card" id="profileCard"></div>
       <div class="card">
-        <div class="subhead">六大指標 vs 團隊人均</div>
-        <div class="kpi-benchmark-note">比較基準為個人榜所列同仁的人均，不是門市總額；全店 KPI 請見上方「門市體質一眼看」。</div>
+        <div class="subhead">六大指標 vs 門市總計</div>
+        <div class="kpi-benchmark-note">參考列直接採用門市全體交易總計，包含未列入個人榜的店長業績。</div>
         <div class="kpi-grid" id="kpiGrid"></div>
       </div>
       <div class="two-col">
@@ -742,15 +742,15 @@ function renderChips(){
     </button>`).join('');
 }
 
-function delta(val, avg){
-  const d = (val - avg) / avg * 100;
+function delta(val, baseline){
+  const d = (val - baseline) / baseline * 100;
   const cls = Math.abs(d) < 2 ? 'flat' : (d > 0 ? 'up' : 'down');
   const arrow = Math.abs(d) < 2 ? '≈' : (d > 0 ? '▲' : '▼');
-  return `<span class="k-delta ${cls} num">${arrow} ${Math.abs(d).toFixed(0)}% vs 平均</span>`;
+  return `<span class="k-delta ${cls} num">${arrow} ${Math.abs(d).toFixed(0)}% vs 門市總計</span>`;
 }
 
 function averageNote(value){
-  return `<div class="k-average num">團隊人均 ${value}</div>`;
+  return `<div class="k-average num">門市總計 ${value}</div>`;
 }
 
 function signedW(value){
@@ -776,12 +776,24 @@ function teamBenchmark(){
   };
 }
 
+function storeBenchmark(){
+  const kpi = label => CUR.kpis.find(item => item.label.includes(label)).value;
+  return {
+    sales: CUR.totals.sales,
+    gap: CUR.totals.sales - CUR.totals.target,
+    upt: Number(kpi('UPT')),
+    ads: Number(kpi('ADS').replace(/,/g, '')),
+    aur: Number(kpi('AUR').replace(/,/g, '')),
+    trans: Number(kpi('Trans').replace(/,/g, '')),
+  };
+}
+
 function selectPerson(id){
   const p = CUR.people.find(x => x.id === id);
   if (!p) return;
   document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.id === id));
   const over = p.ach >= 1;
-  const A = teamBenchmark(), M = CUR.radarMax;
+  const A = teamBenchmark(), B = storeBenchmark(), M = CUR.radarMax;
 
   document.getElementById('profileCard').innerHTML = `
     <div class="profile-head" style="--pc:${p.hex}">
@@ -798,12 +810,12 @@ function selectPerson(id){
     </div>`;
 
   document.getElementById('kpiGrid').innerHTML = `
-    <div class="kpi"><div class="k-label">業績</div><div class="k-value num">${fmtW(p.sales)}</div>${averageNote(fmtW(A.sales))}${delta(p.sales, A.sales)}</div>
-    <div class="kpi"><div class="k-label">差距</div><div class="k-value num" style="color:${over?'var(--good)':'var(--crit)'}">${signedW(p.gap)}</div>${averageNote(signedW(A.gap))}<span class="k-delta ${over?'up':'down'}">${over?'超標':'待補'}</span></div>
-    <div class="kpi"><div class="k-label">連帶率 UPT</div><div class="k-value num">${p.upt.toFixed(2)}</div>${averageNote(A.upt.toFixed(2))}${delta(p.upt, A.upt)}</div>
-    <div class="kpi"><div class="k-label">客均消費 ADS</div><div class="k-value num">${fmtN(p.ads)}</div>${averageNote(fmtN(Math.round(A.ads)))}${delta(p.ads, A.ads)}</div>
-    <div class="kpi"><div class="k-label">件均價 AUR</div><div class="k-value num">${fmtN(p.aur)}</div>${averageNote(fmtN(Math.round(A.aur)))}${delta(p.aur, A.aur)}</div>
-    <div class="kpi"><div class="k-label">成交筆數</div><div class="k-value num">${p.trans}</div>${averageNote(A.trans.toFixed(1))}${delta(p.trans, A.trans)}</div>`;
+    <div class="kpi"><div class="k-label">業績</div><div class="k-value num">${fmtW(p.sales)}</div>${averageNote(fmtW(B.sales))}${delta(p.sales, B.sales)}</div>
+    <div class="kpi"><div class="k-label">差距</div><div class="k-value num" style="color:${over?'var(--good)':'var(--crit)'}">${signedW(p.gap)}</div>${averageNote(signedW(B.gap))}<span class="k-delta ${over?'up':'down'}">${over?'超標':'待補'}</span></div>
+    <div class="kpi"><div class="k-label">連帶率 UPT</div><div class="k-value num">${p.upt.toFixed(2)}</div>${averageNote(B.upt.toFixed(2))}${delta(p.upt, B.upt)}</div>
+    <div class="kpi"><div class="k-label">客均消費 ADS</div><div class="k-value num">${fmtN(p.ads)}</div>${averageNote(fmtN(B.ads))}${delta(p.ads, B.ads)}</div>
+    <div class="kpi"><div class="k-label">件均價 AUR</div><div class="k-value num">${fmtN(p.aur)}</div>${averageNote(fmtN(B.aur))}${delta(p.aur, B.aur)}</div>
+    <div class="kpi"><div class="k-label">成交筆數</div><div class="k-value num">${p.trans}</div>${averageNote(B.trans)}${delta(p.trans, B.trans)}</div>`;
 
   document.getElementById('legendMe').style.background = p.hex;
   document.getElementById('pairBars').innerHTML = Object.entries(p.cats).map(([k,v],i) => {
